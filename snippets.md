@@ -1,1 +1,1 @@
-
+snakemake -pc1 cbig_01_pre_done.txt 
