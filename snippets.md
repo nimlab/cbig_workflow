@@ -1,1 +1,30 @@
 snakemake -pc1 cbig_01_pre_done.txt 
+snakemake -pc1 cbig_1002_01_done.txt 
+
+```
+whatis("Loads freesurfer_7.2 environment")
+setenv("FREESURFER_HOME","/apps/lib/freesurfer/7.2")
+setenv("FIX_VERTEX_AREA","")
+setenv("FMRI_ANALYSIS_DIR","/apps/lib/freesurfer/7.2/fsfast")
+setenv("FREESURFER","/apps/lib/freesurfer/7.2")
+setenv("FSFAST_HOME","/apps/lib/freesurfer/7.2/fsfast")
+setenv("FSF_OUTPUT_FORMAT","nii.gz")
+setenv("FS_OVERRIDE","0")
+setenv("LOCAL_DIR","/apps/lib/freesurfer/7.2/local")
+setenv("MINC_BIN_DIR","/apps/lib/freesurfer/7.2/mni/bin")
+setenv("MINC_LIB_DIR","/apps/lib/freesurfer/7.2/mni/lib")
+setenv("MNI_DATAPATH","/apps/lib/freesurfer/7.2/mni/data")
+setenv("MNI_DIR","/apps/lib/freesurfer/7.2/mni")
+setenv("MNI_PERL5LIB","/apps/lib/freesurfer/7.2/mni/share/perl5")
+setenv("OS","Linux")
+prepend_path("PATH","/apps/lib/freesurfer/7.2/mni/bin")
+prepend_path("PATH","/apps/lib/freesurfer/7.2/tktools")
+prepend_path("PATH","/apps/lib/freesurfer/7.2/fsfast/bin")
+prepend_path("PATH","/apps/lib/freesurfer/7.2/bin")
+prepend_path("PATH","/apps/lib/freesurfer/7.2/MCRv84/bin")
+prepend_path("PATH","/apps/lib/freesurfer/7.2/MCRv84/bin/glnxa64")
+prepend_path("LD_LIBRARY_PATH","/apps/lib/freesurfer/7.2/MCRv84/bin/glnxa64")
+setenv("MCR_DIR","/apps/lib/freesurfer/7.2/MCRv84")
+setenv("PERL5LIB","/apps/lib/freesurfer/7.2/mni/share/perl5")
+setenv("SUBJECTS_DIR","/apps/lib/freesurfer/7.2/subjects")
+```
