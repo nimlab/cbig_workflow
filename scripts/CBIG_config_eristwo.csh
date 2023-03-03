@@ -1,6 +1,9 @@
 #! /bin/csh
 #
 
+#module load freesurfer/7.2.0
+module load MATLAB/2018b
+
 # DO NOT CHANGE: This clears old freesurfer variables if they previously exists
 # ^ Changing since fs is handled by lmod
 #if( $?FREESURFER_HOME ) then
@@ -12,8 +15,8 @@ setenv CBIG_CODE_DIR /data/nimlab/software/CBIG_nimlab/CBIG
 
 # PLEASE CHANGE: define locations for these libraries
 #setenv FREESURFER_HOME    /apps/arch/Linux_x86_64/freesurfer/5.3.0
-setenv CBIG_MATLAB_DIR    /apps/lib-osver/matlab/2018b 
-setenv CBIG_SPM_DIR       /apps/lib-osver/spm12/7771/
+setenv CBIG_MATLAB_DIR    /apps/software/MATLAB/R2018b 
+setenv CBIG_SPM_DIR       /data/nimlab/software/spm12/
 # AFNI is not needed for preprocessing
 #setenv CBIG_AFNI_DIR      /apps/arch/Linux_x86_64/afni/AFNI_2011_12_21_1014/linux_openmp_64
 setenv CBIG_ANTS_DIR      /data/nimlab/toolkits/ants-2.4.3/bin/
