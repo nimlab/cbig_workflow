@@ -31,6 +31,30 @@ rule create_fmrinii:
             for r in runs:
                 f.write(f"{r} {basepath}_task-rest_run-{r}_bold.nii.gz \n")
 
+rule create_multiecho_fmrinii:
+    output:
+        "data/cbig_configs/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_multiecho_fmrinii.txt"
+    input:
+        "data/BIDS/sub-{sub}/ses-{ses}",
+    run:
+        shell(f"mkdir -p data/cbig_configs/sub-{wildcards.sub}_ses-{wildcards.ses}")
+        basepath = f"{input}/func/sub-{wildcards.sub}_ses-{wildcards.ses}"
+        #print(basepath)
+        runs, echos = glob_wildcards(basepath + "_task-rest_run-{run}_echo-{echo}_bold.nii.gz")
+        run_echos = {}
+        for i in zip(runs, echos):
+            if i[0] not in run_echos:
+                run_echos[i[0]] = [i[1]]
+                continue
+            run_echos[i[0]].append(i[1])
+        print(run_echos)
+        # with open(output[0],"w+") as f:
+        #     for r in runs:
+        #         line = str(r)
+        #         for e in echos:
+        #             line += f"{basepath}_task-rest_run-{r}_echo-{e}_bold.nii.gz"
+        #         f.write(line)
+
 rule create_st_file:
     output:
         "data/cbig_configs/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_slicetiming.txt"
