@@ -98,7 +98,17 @@ rule create_echotimes_file:
 
         
 # Run CBIG
-shell("export st_file=$PWD/{input[2]} && \
+rule cbig:
+    output:
+        "cbig_{sub}_{ses}_done.txt"
+    input:
+        "data/fs_subjects/sub-{sub}_ses-{ses}",
+        "data/cbig_configs/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_fmrinii.txt",
+        "data/cbig_configs/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_slicetiming.txt"
+    run:
+        begin_time = datetime.now()
+        shell("mkdir -p data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses}/")
+        shell("export st_file=$PWD/{input[2]} && \
                 source scripts/freesurfer_setup.bash && \
                 echo $FREESURFER_HOME && \
                 csh -c \"$CBIG_CODE_DIR/stable_projects/preprocessing/CBIG_fMRI_Preproc2016/CBIG_preproc_fMRI_preprocess.csh \
@@ -138,26 +148,3 @@ rule cbig_multiecho:
                 -anat_d $PWD/data/fs_subjects \
                 -output_d $PWD/data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses} \
                 -config scripts/preproc_CBIG_Butler.config\"")
-
-rule cbig_multiecho:
-    output:
-        "cbig_{sub}_{ses}_multiecho_done.txt"
-    input:
-        "data/fs_subjects/sub-{sub}_ses-{ses}",
-        "data/cbig_configs/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_multiecho_fmrinii.txt",
-        "data/cbig_configs/sub-{sub}_ses-{ses}/multiecho_slicetimings",
-        "data/cbig_configs/sub-{sub}_ses-{ses}/echotimes.txt"
-    run:
-        #shell("csh -c \"source scripts/CBIG_config_erstwo.csh\"")
-        shell("mkdir -p data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses}/")
-        #shell("export st_file={input[2]}")
-        shell("export st_file=$PWD/{input[2]} && \
-                export met_val=$(cat {input[3]}) && \
-                source scripts/freesurfer_setup.bash && \
-                csh -c \"$CBIG_CODE_DIR/stable_projects/preprocessing/CBIG_fMRI_Preproc2016/CBIG_preproc_fMRI_preprocess.csh \
-                -s {wildcards.sub} \
-                -fmrinii $PWD/{input[1]} \
-                -anat_s sub-{wildcards.sub}_ses-{wildcards.ses} \
-                -anat_d $PWD/data/fs_subjects \
-                -output_d $PWD/data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses} \
-                -config scripts/BWH_multiecho.config\"")
