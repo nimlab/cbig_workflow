@@ -104,7 +104,7 @@ rule cbig:
         "data/cbig_configs/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_fmrinii.txt",
         "data/cbig_configs/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_slicetiming.txt"
     output:
-        "cbig_{sub}_{ses}_done.txt"
+        "cbig_sub-{sub}_ses-{ses}_done.txt"
 
     run:
         begin_time = datetime.now()
@@ -160,3 +160,9 @@ rule cbig_multiecho:
 # QC metrics
 rule mriqc:
     input:
+        "data/BIDS/sub-{sub}/ses-{ses}/"
+    output:
+        directory("data/qc/sub-{sub}_ses-{ses}/mriqc")
+    run:
+        shell("mkdir {output[0]}")
+        shell("sh scripts/qc/run_mriqc.sh {input[0]} {output[0]} {wildcards.sub}")
