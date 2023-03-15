@@ -88,10 +88,9 @@ rule create_echotimes_file:
         for e in echos:
             with open(basepath + f"_task-rest_run-01_echo-{e}_bold.json") as f:
                 sidecar = json.load(f)
-                echotimes.append(round(sidecar['EchoTime'] * 1000,2))
+                echotimes.append(str(round(sidecar['EchoTime'] * 1000,2)))
         with open(output[0],"w+") as f:
-            for t in echotimes:
-                f.write(str(t) + " ")
+            f.write(",".join(echotimes))
 
         
         
@@ -137,7 +136,7 @@ rule cbig_multiecho:
     run:
         begin_time = datetime.now()
         shell("mkdir -p data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses}/")
-        shell("export st_file=$PWD/{input[2]} && \
+        shell("export st_files=$(ls -p $PWD/{input[2]}/* | tr '\n' ',') && \
                 export met_val=$(cat {input[3]}) && \
                 source scripts/freesurfer_setup.bash && \
                 echo $FREESURFER_HOME && \
@@ -147,4 +146,11 @@ rule cbig_multiecho:
                 -anat_s sub-{wildcards.sub}_ses-{wildcards.ses} \
                 -anat_d $PWD/data/fs_subjects \
                 -output_d $PWD/data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses} \
-                -config scripts/preproc_CBIG_Butler.config\"")
+                -config scripts/BWH_multiecho.config -nocleanup\"")
+        end_time = datetime.now()
+        begin_time_str = begin_time.strftime("%d/%m/%Y %H:%M:%S")
+        end_time_str = end_time.strftime("%d/%m/%Y %H:%M:%S")
+        with open(f"cbig_{wildcards.sub}_{wildcards.ses}_multiecho_done.txt", "w+") as f:
+            f.write(f"CBIG started {begin_time_str} \n")
+            f.write(f"CBIG ended {end_time_str} \n")
+            f.write(f"CBIG took {(end_time - begin_time).total_seconds() / 60} minutes")
