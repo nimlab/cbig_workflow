@@ -1,6 +1,17 @@
 snakemake -pc1 cbig_01_pre_done.txt 
 snakemake -pc1 cbig_1002_01_done.txt 
 
+snakemake -pc1 data/cbig_configs/sub-3015_ses-01/sub-3015_ses-01_multiecho_fmrinii.txt
+
+```bash
+# Create milti-echo time file from BIDS-formatted json files:
+export met_file=${output_dir}/${participant_id}/${participant_id}_bold.multiechotime
+if ls ${bids_dir}/${participant_id}/${session_id}/func/*task-rest*_bold.json | grep "echo" 1> /dev/null 2>&1; then
+        jq .'EchoTime' $(ls ${bids_dir}/${participant_id}/${session_id}/func/*task-rest*echo*_bold.json | grep "run-01") | pr -ts, --column ${echo_num} > $met_file
+        export met_val=$(cat $met_file)
+	echo "Used ${bids_dir}/${participant_id}/${session_id}/func/task-rest_echo_bold.json for multi-echo time information"
+```
+
 ```
 whatis("Loads freesurfer_7.2 environment")
 setenv("FREESURFER_HOME","/apps/lib/freesurfer/7.2")
