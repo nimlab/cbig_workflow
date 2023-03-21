@@ -152,7 +152,7 @@ rule cbig_multiecho:
         end_time = datetime.now()
         begin_time_str = begin_time.strftime("%d/%m/%Y %H:%M:%S")
         end_time_str = end_time.strftime("%d/%m/%Y %H:%M:%S")
-        with open(f"cbig_{wildcards.sub}_{wildcards.ses}_multiecho_done.txt", "w+") as f:
+        with open(f"cbig_sub-{wildcards.sub}_ses-{wildcards.ses}_multiecho_done.txt", "w+") as f:
             f.write(f"CBIG started {begin_time_str} \n")
             f.write(f"CBIG ended {end_time_str} \n")
             f.write(f"CBIG took {(end_time - begin_time).total_seconds() / 60} minutes")
@@ -162,7 +162,7 @@ rule mriqc:
     input:
         "data/BIDS/sub-{sub}/ses-{ses}/"
     output:
-        directory("data/qc/sub-{sub}_ses-{ses}/mriqc")
+        directory("data/qc/mriqc/sub-{sub}/ses-{ses}/"),
     run:
-        shell("mkdir {output[0]}")
-        shell("sh scripts/qc/run_mriqc.sh {input[0]} {output[0]} {wildcards.sub}")
+        shell("mkdir -p data/qc/mriqc/")
+        shell("sh scripts/qc/run_mriqc.sh data/BIDS data/qc/mriqc/ {wildcards.sub}")
