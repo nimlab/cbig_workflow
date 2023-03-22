@@ -1,12 +1,5 @@
 import json
-
 from datetime import datetime
-
-rule all:
-    output:
-        "finished.txt"
-    shell:
-        "touch finished.txt"
 
 # Run freesurfer recon-all, which is a prerequisite to CBIG
 rule recon_all:
@@ -167,3 +160,13 @@ rule mriqc:
     run:
         shell("mkdir -p data/qc/mriqc/")
         shell("sh scripts/qc/run_mriqc.sh data/BIDS data/qc/mriqc/ {wildcards.sub}")
+
+# Concatenate final output timecourses
+rule concat_tcs:
+    input:
+        "cbig_sub-{sub}_ses-{ses}_multiecho_done.txt",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol"
+    output:
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
+    run:
+        shell(f"fslmerge -t {output[0]} {input[1]}/*_finalmask.nii.gz")
