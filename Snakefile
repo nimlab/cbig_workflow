@@ -13,10 +13,11 @@ rule recon_all:
     input:
         "data/BIDS/sub-{sub}/ses-{ses}/anat/sub-{sub}_ses-{ses}_T1w.nii.gz"
     output:
-        directory("data/fs_subjects/sub-{sub}_ses-{ses}")
+        directory("data/fs_subjects/sub-{sub}_ses-{ses}"),
+        "data/fs_subjects/sub-{sub}_ses-{ses}/scripts/recon-all.done"
     run:
         shell("mkdir -p data/fs_subjects")
-        shell(f"scripts/run_recon.sh data/fs_subjects {input} sub-{wildcards.sub}_ses-{wildcards.ses}")
+        shell(f"scripts/run_recon.sh data/fs_subjects/sub-{wildcards.sub}_ses-{wildcards.ses} {input} sub-{wildcards.sub}_ses-{wildcards.ses}")
 
 # Prepare and format misc files needed by CBIG
 rule create_fmrinii:
@@ -104,7 +105,7 @@ rule cbig:
         "data/cbig_configs/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_fmrinii.txt",
         "data/cbig_configs/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_slicetiming.txt"
     output:
-        "cbig_sub-{sub}_ses-{ses}_done.txt"
+        "cbig_sub-{sub}_ses-{ses}_singleecho_done.txt"
 
     run:
         begin_time = datetime.now()
@@ -148,7 +149,7 @@ rule cbig_multiecho:
                 -anat_s sub-{wildcards.sub}_ses-{wildcards.ses} \
                 -anat_d $PWD/data/fs_subjects \
                 -output_d $PWD/data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses} \
-                -config scripts/BWH_multiecho.config -nocleanup\"")
+                -config scripts/BWH_multiecho.config\"")
         end_time = datetime.now()
         begin_time_str = begin_time.strftime("%d/%m/%Y %H:%M:%S")
         end_time_str = end_time.strftime("%d/%m/%Y %H:%M:%S")
