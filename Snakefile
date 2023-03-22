@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from nimlab import connectomics as cs
 
 # Run freesurfer recon-all, which is a prerequisite to CBIG
 rule recon_all:
@@ -170,3 +171,13 @@ rule concat_tcs:
         "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
     run:
         shell(f"fslmerge -t {output[0]} {input[1]}/*_finalmask.nii.gz")
+
+# Calculate connectivity depression map
+rule depression_conn:
+    input:
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
+    output:
+        "data/connectivity/sub-{sub}_ses-{ses}/AIIFX_wmean_z.nii.gz"
+    run:
+        res = cs.singlesubject_seed_conn("standard_data/AllFX_wmean.nii.gz", input[0], transform="zscore")
+        res.to_filename(output[0])
