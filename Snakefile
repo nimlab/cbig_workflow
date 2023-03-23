@@ -10,8 +10,10 @@ rule recon_all:
         directory("data/fs_subjects/sub-{sub}_ses-{ses}"),
         "data/fs_subjects/sub-{sub}_ses-{ses}/scripts/recon-all.done"
     run:
-        shell("mkdir -p data/fs_subjects")
-        shell(f"scripts/run_recon.sh data/fs_subjects/sub-{wildcards.sub}_ses-{wildcards.ses} {input} sub-{wildcards.sub}_ses-{wildcards.ses}")
+        # Snakemake auto-creates output dirs, but freesurfer fails if output dirs exist
+        shell(f"rm -rf data/fs_subjects/sub-{wildcards.sub}_ses-{wildcards.ses}/")
+        shell(f"bash scripts/run_recon.sh data/fs_subjects {input} sub-{wildcards.sub}_ses-{wildcards.ses}")
+
 
 # Prepare and format misc files needed by CBIG
 rule create_fmrinii:
@@ -152,16 +154,6 @@ rule cbig_multiecho:
             f.write(f"CBIG ended {end_time_str} \n")
             f.write(f"CBIG took {(end_time - begin_time).total_seconds() / 60} minutes")
 
-# QC metrics
-rule mriqc:
-    input:
-        "data/BIDS/sub-{sub}/ses-{ses}/"
-    output:
-        directory("data/qc/mriqc/sub-{sub}/ses-{ses}/"),
-    run:
-        shell("mkdir -p data/qc/mriqc/")
-        shell("sh scripts/qc/run_mriqc.sh data/BIDS data/qc/mriqc/ {wildcards.sub}")
-
 # Concatenate final output timecourses
 rule concat_tcs:
     input:
@@ -172,7 +164,7 @@ rule concat_tcs:
     run:
         shell(f"fslmerge -t {output[0]} {input[1]}/*_finalmask.nii.gz")
 
-# Calculate connectivity depression map
+# Calculate connectivity to depression map
 rule depression_conn:
     input:
         "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
@@ -181,3 +173,15 @@ rule depression_conn:
     run:
         res = cs.singlesubject_seed_conn("standard_data/AllFX_wmean.nii.gz", input[0], transform="zscore")
         res.to_filename(output[0])
+
+
+# QC metrics
+rule mriqc:
+    input:
+        "data/BIDS/sub-{sub}/ses-{ses}/"
+    output:
+        directory("data/qc/mriqc/sub-{sub}/ses-{ses}/"),
+    run:
+        shell("mkdir -p data/qc/mriqc/")
+        shell("sh scripts/qc/run_mriqc.sh data/BIDS data/qc/mriqc/ {wildcards.sub}")
+
