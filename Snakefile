@@ -176,6 +176,15 @@ rule depression_conn:
         res = cs.singlesubject_seed_conn("standard_data/AllFX_wmean.nii.gz", input[0], transform="zscore")
         res.to_filename(output[0])
 
+rule searchlight:
+    input:
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
+    output:
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_searchlight.nii.gz"
+    run:
+        shell(f"python scripts/searchlight.py {input[0]} {output[0]}")
+    
+
 
 # QC metrics
 rule mriqc:
