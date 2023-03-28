@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from nimlab import connectomics as cs
+import os
 
 # Run freesurfer recon-all, which is a prerequisite to CBIG
 rule recon_all:
@@ -12,7 +13,8 @@ rule recon_all:
     run:
         # Snakemake auto-creates output dirs, but freesurfer fails if output dirs exist
         shell(f"rm -rf data/fs_subjects/sub-{wildcards.sub}_ses-{wildcards.ses}/")
-        shell(f"bash scripts/run_recon.sh data/fs_subjects {input} sub-{wildcards.sub}_ses-{wildcards.ses}")
+        # Don't destroy our node
+        shell(f"nice -n 19 bash scripts/run_recon.sh data/fs_subjects {input} sub-{wildcards.sub}_ses-{wildcards.ses}")
 
 
 # Prepare and format misc files needed by CBIG
@@ -109,7 +111,7 @@ rule cbig:
         shell("export st_file=$PWD/{input[2]} && \
                 source scripts/freesurfer_setup.bash && \
                 echo $FREESURFER_HOME && \
-                csh -c \"$CBIG_CODE_DIR/stable_projects/preprocessing/CBIG_fMRI_Preproc2016/CBIG_preproc_fMRI_preprocess.csh \
+                nice -n 19 csh -c \"$CBIG_CODE_DIR/stable_projects/preprocessing/CBIG_fMRI_Preproc2016/CBIG_preproc_fMRI_preprocess.csh \
                 -s {wildcards.sub} \
                 -fmrinii $PWD/{input[1]} \
                 -anat_s sub-{wildcards.sub}_ses-{wildcards.ses} \
@@ -139,7 +141,7 @@ rule cbig_multiecho:
                 export met_val=$(cat {input[3]}) && \
                 source scripts/freesurfer_setup.bash && \
                 echo $FREESURFER_HOME && \
-                csh -c \"$CBIG_CODE_DIR/stable_projects/preprocessing/CBIG_fMRI_Preproc2016/CBIG_preproc_fMRI_preprocess.csh \
+                nice -n 19 csh -c \"$CBIG_CODE_DIR/stable_projects/preprocessing/CBIG_fMRI_Preproc2016/CBIG_preproc_fMRI_preprocess.csh \
                 -s {wildcards.sub} \
                 -fmrinii $PWD/{input[1]} \
                 -anat_s sub-{wildcards.sub}_ses-{wildcards.ses} \
