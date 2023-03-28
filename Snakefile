@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from nimlab import connectomics as cs
+from nilearn import image
 import os
 
 # Run freesurfer recon-all, which is a prerequisite to CBIG
@@ -165,6 +166,22 @@ rule concat_tcs:
         "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
     run:
         shell(f"fslmerge -t {output[0]} {input[1]}/*_finalmask.nii.gz")
+
+# Split concatenated output in half for intra-subject qc purposes
+rule split_concat:
+    input:
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
+    output:
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-1.nii.gz",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-2.nii.gz",
+    run:
+        concat_img = image.load_img(input[0])
+        half = int(concat_img.shape[3] / 2)
+        split1 = image.index_img(concat_img, slice(0, half))
+        split2 = image.index_img(concat_img, slice(half,None))
+        split1.to_filename(output[0])
+        split2.to_filename(output[1])
+
 
 # Calculate connectivity to depression map
 rule depression_conn:
