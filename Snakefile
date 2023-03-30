@@ -195,11 +195,31 @@ rule depression_conn:
 
 rule searchlight:
     input:
-        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-1.nii.gz",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-2.nii.gz",
     output:
-        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_searchlight.nii.gz"
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_searchlight.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-1_searchlight.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-2_searchlight.nii.gz"
     run:
         shell(f"python scripts/searchlight.py {input[0]} {output[0]}")
+        shell(f"python scripts/searchlight.py {input[1]} {output[1]}")
+        shell(f"python scripts/searchlight.py {input[2]} {output[2]}")
+
+rule searchlight_spatialcorr:
+    input:
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-1.nii.gz",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-2.nii.gz",
+    output:
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_searchlight_spatialcorr.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-1_searchlight_spatialcorr.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-2_searchlight_spatialcorr.nii.gz"
+    run:
+        shell(f"python scripts/searchlight_spatialcorr.py {input[0]} {output[0]}")
+        shell(f"python scripts/searchlight_spatialcorr.py {input[1]} {output[1]}")
+        shell(f"python scripts/searchlight_spatialcorr.py {input[2]} {output[2]}")
     
 
 
