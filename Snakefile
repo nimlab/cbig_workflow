@@ -186,12 +186,20 @@ rule split_concat:
 # Calculate connectivity to depression map
 rule depression_conn:
     input:
-        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-1.nii.gz",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-2.nii.gz",
     output:
-        "data/connectivity/sub-{sub}_ses-{ses}/AIIFX_wmean_z.nii.gz"
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_AllFX_wmean_z.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-1_AllFX_wmean_z.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-2_AllFX_wmean_z.nii.gz"
     run:
         res = cs.singlesubject_seed_conn("standard_data/AllFX_wmean.nii.gz", input[0], transform="zscore")
         res.to_filename(output[0])
+        res = cs.singlesubject_seed_conn("standard_data/AllFX_wmean.nii.gz", input[1], transform="zscore")
+        res.to_filename(output[1])
+        res = cs.singlesubject_seed_conn("standard_data/AllFX_wmean.nii.gz", input[2], transform="zscore")
+        res.to_filename(output[2])
 
 rule searchlight:
     input:
@@ -220,7 +228,20 @@ rule searchlight_spatialcorr:
         shell(f"python scripts/searchlight_spatialcorr.py {input[0]} {output[0]}")
         shell(f"python scripts/searchlight_spatialcorr.py {input[1]} {output[1]}")
         shell(f"python scripts/searchlight_spatialcorr.py {input[2]} {output[2]}")
-    
+
+rule cluster_cog:
+    input:
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_AllFX_wmean_z.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-1_AllFX_wmean_z.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-2_AllFX_wmean_z.nii.gz",
+    output:
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_cog.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-1_cog.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-2_cog.nii.gz"
+    run:
+        shell(f"python scripts/cluster_cog.py {input[0]} {output[0]}")
+        shell(f"python scripts/cluster_cog.py {input[1]} {output[1]}")
+        shell(f"python scripts/cluster_cog.py {input[2]} {output[2]}")
 
 
 # QC metrics
@@ -233,3 +254,16 @@ rule mriqc:
         shell("mkdir -p data/qc/mriqc/")
         shell("sh scripts/qc/run_mriqc.sh data/BIDS data/qc/mriqc/ {wildcards.sub}")
 
+rule window_clust:
+    input:
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-1.nii.gz",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-2.nii.gz",
+    output:
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_windowclust.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-1_windowclust.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-2_windowclust.nii.gz"
+    run:
+        shell(f"python scripts/window_clust.py {input[0]} {output[0]}")
+        shell(f"python scripts/window_clust.py {input[1]} {output[1]}")
+        shell(f"python scripts/window_clust.py {input[2]} {output[2]}")
