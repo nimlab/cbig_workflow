@@ -5,6 +5,8 @@ from nilearn import image, maskers
 from tqdm import tqdm
 import sys
 import numpy as np
+from multiprocessing import Pool
+import tempfile
 
 def adjacent_voxels(x, y, z, shape):
     def _inbounds(coord, shape):
@@ -20,9 +22,23 @@ def adjacent_voxels(x, y, z, shape):
                     adj.append(adj_candidate)
     return adj
 
+def _generate_cones(args):
+    idx = args[0]
+    c = args[1]
+    filename = args[2]
+    brain_img = args[3]
+    tc = args[4]
+    memmap_shape = args[5]
+    coord_avgtcs = np.memmap(filename, mode="r+", shape=memmap_shape, dtype=np.float32)
+    print(coord_avgtcs.mean())
+    world_c = image.coord_transform(c[0], c[1], c[2], brain_img.affine)
+    cone = masker.transform(fn.make_tms_cone(brain_img, world_c[0], world_c[1], world_c[2]))
+    cone_avgtc = cs.extract_avg_signal(tc, cone)
+    coord_avgtcs[idx,:] = cone_avgtc
+    coord_avgtcs.flush()
 
 if __name__=="__main__":
-    # The dlpfc mask is slightly larger than the brain mask\
+    # The dlpfc mask is slightly larger than the brain mask
     print("loading files")
     dlpfc = image.load_img("standard_data/spalm_dlPFC_GMmasked_03272023.nii.gz").get_fdata()
     brain_img = ds.get_img("MNI152_T1_2mm_brain_mask")
@@ -44,17 +60,19 @@ if __name__=="__main__":
                 surface_dat[c] = 1
                 surface_coords.append(c)
                 break
-    image.new_img_like(brain_img, surface_dat).to_filename("data/dlpfc_surface.nii.gz")
+
     allfx_avgtc = cs.extract_avg_signal(tc, allfx)
-    xv = allfx_avgtc - allfx_avgtc.mean(axis=0)
-    xvss = (xv * xv).sum(axis=0)
-    for c in tqdm(surface_coords):
-        world_c = image.coord_transform(c[0], c[1], c[2], brain_img.affine)
-        #print(world_c)
-        cone = masker.transform(fn.make_tms_cone(brain_img, world_c[0], world_c[1], world_c[2]))
-        cone_avgtc = cs.extract_avg_signal(tc, cone)
-        corr = cs._np_pearson_cor(xv, xvss, cone_avgtc)
-        #print(corr)
-        searchlight_result[c] = corr
+    with tempfile.NamedTemporaryFile() as ntf:
+        temp_name = ntf.name
+        coord_avgtcs = np.memmap(temp_name, mode="w+", shape=(len(surface_coords),allfx_avgtc.shape[0]), dtype=np.float32)
+        with Pool(16) as pool:
+            args = [(i, surface_coords[i], temp_name, brain_img, tc, (len(surface_coords),allfx_avgtc.shape[0])) for i in range(0, len(surface_coords))]
+            pool.map(_generate_cones, args)
+        coord_avgtcs = coord_avgtcs.copy()
+    searchlight_corrs = cs.pearson_corr(coord_avgtcs.T, allfx_avgtc[:,np.newaxis])
+    searchlight_result = np.zeros(brain_img.shape)
+    for idx, c in enumerate(surface_coords):
+        searchlight_result[c] = searchlight_corrs[idx,0]
+    print(f"Searchlight result shape: {searchlight_result.shape}")
     max_coord = np.unravel_index(searchlight_result.argmax(), searchlight_result.shape)
     image.new_img_like(brain_img, searchlight_result).to_filename(sys.argv[2])
