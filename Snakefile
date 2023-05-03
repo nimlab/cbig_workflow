@@ -161,11 +161,11 @@ rule cbig_multiecho:
 rule concat_tcs:
     input:
         "cbig_sub-{sub}_ses-{ses}_multiecho_done.txt",
-        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol"
+        #"data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol"
     output:
         "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
     run:
-        shell(f"fslmerge -t {output[0]} {input[1]}/*_finalmask.nii.gz")
+        shell(f"fslmerge -t {output[0]} data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses}/{wildcards.sub}/vol/*_finalmask.nii.gz")
 
 # Split concatenated output in half for intra-subject qc purposes
 rule split_concat:
@@ -208,12 +208,15 @@ rule searchlight:
         "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_split-2.nii.gz",
     output:
         "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_searchlight.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_searchlight_peak.txt",
         "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-1_searchlight.nii.gz",
-        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-2_searchlight.nii.gz"
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-1_searchlight_peak.txt",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-2_searchlight.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_split-2_searchlight_peak.txt"
     run:
-        shell(f"python scripts/searchlight.py {input[0]} {output[0]}")
-        shell(f"python scripts/searchlight.py {input[1]} {output[1]}")
-        shell(f"python scripts/searchlight.py {input[2]} {output[2]}")
+        shell(f"python scripts/searchlight.py {input[0]} {output[0]} {output[1]}")
+        shell(f"python scripts/searchlight.py {input[1]} {output[2]} {output[3]}")
+        shell(f"python scripts/searchlight.py {input[2]} {output[4]} {output[5]}")
 
 rule searchlight_spatialcorr:
     input:

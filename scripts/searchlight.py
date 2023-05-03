@@ -29,8 +29,8 @@ def _generate_cones(args):
     brain_img = args[3]
     tc = args[4]
     memmap_shape = args[5]
+    print(idx)
     coord_avgtcs = np.memmap(filename, mode="r+", shape=memmap_shape, dtype=np.float32)
-    print(coord_avgtcs.mean())
     world_c = image.coord_transform(c[0], c[1], c[2], brain_img.affine)
     cone = masker.transform(fn.make_tms_cone(brain_img, world_c[0], world_c[1], world_c[2]))
     cone_avgtc = cs.extract_avg_signal(tc, cone)
@@ -73,6 +73,9 @@ if __name__=="__main__":
     searchlight_result = np.zeros(brain_img.shape)
     for idx, c in enumerate(surface_coords):
         searchlight_result[c] = searchlight_corrs[idx,0]
-    print(f"Searchlight result shape: {searchlight_result.shape}")
-    max_coord = np.unravel_index(searchlight_result.argmax(), searchlight_result.shape)
+    max_coord = np.unravel_index(searchlight_result.argmax(), searchlight_result.shape) 
+    max_mm_coord = image.coord_transform(max_coord[0], max_coord[1], max_coord[2], brain_img.affine)
+    with open(sys.argv[3],"w+") as f:
+        f.write(f"Peak vox coordinate: {max_coord} \n")
+        f.write(f"Peak mm coordinate: {max_mm_coord} \n")
     image.new_img_like(brain_img, searchlight_result).to_filename(sys.argv[2])
