@@ -12,9 +12,13 @@ TODO:
 
 ## Data Prep
 ```
-# Uncompress files files
+# Create new directories
 > mkdir /data/aint/RAW/00/pre/tar
 > mkdir /data/aint/RAW/00/pre/untarred
+
+# Copy over files from Lisa server (commands omitted)
+
+# Uncompress files
 > cd /data/aint/RAW/00/pre
 > for f in tar/*.tar; do tar -xf $f -C untarred; done;
 
@@ -26,10 +30,13 @@ TODO:
 ```
 
 ## Run the pipeline!
+The pipeline is coordinated using [Snakemake](https://github.com/snakemake/snakemake) which automatically calculates what steps need to be run in order to produce a desired file. Since we want to produce the target coordinates, we tell Snakemake to produce `data/target/sub-00_ses-pre/sub_target.txt`
 ```
 > csh
-> source source scripts/CBIG_setup_eristwo.csh
+> source scripts/CBIG_setup_eristwo.csh
 > source scripts/freesurfer_setup.csh
 # The -np flag indicates that this is a dry run. Check that the pipeline steps look like what you want before proceeding
-> snakemake -np data/connectivity/sub-00_ses-pre/sub-00_ses-pre_searchlight.nii.gz
+> snakemake -np data/target/sub-00_ses-pre/sub_target.txt
+# If everything seems fine, run it with c1 to specify 1 parallel job. Using more is possible if running multiple subjects, but may overload the node.
+> snakemake -pc1 data/target/sub-00_ses-pre/sub_target.txt
 ```
