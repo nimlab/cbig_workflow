@@ -39,3 +39,33 @@ setenv("MCR_DIR","/apps/lib/freesurfer/7.2/MCRv84")
 setenv("PERL5LIB","/apps/lib/freesurfer/7.2/mni/share/perl5")
 setenv("SUBJECTS_DIR","/apps/lib/freesurfer/7.2/subjects")
 ```
+
+```
+snakemake -pc8 \
+cbig_sub-3015_ses-01_multiecho_done.txt \
+cbig_sub-3016_ses-01_multiecho_done.txt \
+cbig_sub-3017_ses-01_multiecho_done.txt \
+cbig_sub-3017_ses-02_multiecho_done.txt \
+cbig_sub-3018_ses-02_multiecho_done.txt \
+cbig_sub-3020_ses-01_multiecho_done.txt \
+cbig_sub-3022_ses-01_multiecho_done.txt \
+cbig_sub-4001_ses-01_multiecho_done.txt \
+cbig_sub-4003_ses-01_multiecho_done.txt
+```
+
+
+```bash
+mri_vol2vol --mov $input --s sub-3015_ses01 --targ $FREESURFER_HOME/average/mni305.cor.mgz --m3z talairach.m3z --o $tmp_output --no-save-reg --interp cubic
+
+Step 1 - dst to fs:
+setenv SUBJECTS_DIR /data/nimlab/software/CBIG_nimlab/CBIG/data/templates/volume/
+mri_vol2vol --mov data/cbig_output/sub-3015_ses-01/3015/vol/norm_MNI152_1mm.nii.gz --targ /data/nimlab/software/CBIG_nimlab/CBIG/data/templates/volume/FSL_MNI152_FS4.5.0/mri/norm.nii.gz --s FSL_MNI152_FS4.5.0 --m3z talairach.m3z --o fstest3.nii.gz --no-save-reg --interp cubic
+
+Step 2 - fs to src:
+setenv SUBJECTS_DIR /data/nimlab/USERS/cl20/cbig_workflow/data/fs_subjects
+export SUBJECTS_DIR=/data/nimlab/USERS/cl20/cbig_workflow/data/fs_subjects
+cd /data/nimlab/USERS/cl20/cbig_workflow/data/fs_subjects/sub-3015_ses-01/mri/
+mri_vol2vol --mov /data/nimlab/USERS/cl20/cbig_workflow/data/fs_subjects/sub-3015_ses-01/mri/norm.mgz --s sub-3015_ses-01 --targ /data/nimlab/USERS/cl20/cbig_workflow/fstest3.nii.gz --o /data/nimlab/USERS/cl20/cbig_workflow/fs2test1.nii.gz --no-save-reg --interp cubic --inv-morph
+
+
+```

@@ -1,2 +1,4 @@
 data/
 .snakemake/
+*_done.txt
+.panfs*
