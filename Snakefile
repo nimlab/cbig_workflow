@@ -1,7 +1,10 @@
 import json
 from datetime import datetime
 from nimlab import connectomics as cs
+from nimlab import functions as fn
 from nilearn import image
+from numpy.linalg import inv
+import numpy as np
 import os
 
 # Run freesurfer recon-all, which is a prerequisite to CBIG
@@ -134,7 +137,8 @@ rule cbig_multiecho:
         "data/cbig_configs/sub-{sub}_ses-{ses}/multiecho_slicetimings",
         "data/cbig_configs/sub-{sub}_ses-{ses}/echotimes.txt"
     output:
-        "cbig_sub-{sub}_ses-{ses}_multiecho_done.txt"
+        "cbig_sub-{sub}_ses-{ses}_multiecho_done.txt",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/norm_MNI152_1mm.nii.gz"
     run:
         begin_time = datetime.now()
         shell("mkdir -p data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses}/")
@@ -245,6 +249,65 @@ rule cluster_cog:
         shell(f"python scripts/cluster_cog.py {input[0]} {output[0]}")
         shell(f"python scripts/cluster_cog.py {input[1]} {output[1]}")
         shell(f"python scripts/cluster_cog.py {input[2]} {output[2]}")
+
+
+rule subject_target:
+    input:
+        "data/fs_subjects/sub-{sub}_ses-{ses}",
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/norm_MNI152_1mm.nii.gz",
+        "data/connectivity/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_searchlight_peak.txt"
+    output:
+        "data/target/sub-{sub}_ses-{ses}/sub_target.txt"
+    run:
+        #os.makedirs(f"data/target/sub-{wildcards.sub}_ses-{wildcards.ses}/",exist_ok=True)
+        def center_of_gravity(arr):
+            x = 0
+            y = 0
+            z = 0
+            total = 0
+            for c in np.ndindex(arr.shape):
+                if arr[c] == 0:
+                    continue
+                total += arr[c]
+                x += c[0] * arr[c]
+                y += c[1] * arr[c]
+                z += c[2] * arr[c]
+            return x / total, y / total, z / total
+
+        ref = image.load_img(input[1])
+        with open(input[2]) as f:
+            lines = [l.strip() for l in f.readlines()]
+        coord_strings = lines[1].split(": ")[-1].replace("(","").replace(")","").split(",")
+        print(coord_strings)
+        coords = (float(coord_strings[0]), float(coord_strings[1]), float(coord_strings[2])) 
+        print(coords)
+
+        blank = np.zeros(ref.shape)
+        vox_coords = image.coord_transform(coords[0], coords[1], coords[2], inv(ref.affine))
+        mni_sphere = fn.make_sphere(ref, vox_coords, 2, 100)
+        mni_sphere.to_filename(f"data/target/sub-{wildcards.sub}_ses-{wildcards.ses}/mni.nii.gz")
+
+        # Transform to FS space
+        shell(f"SUBJECTS_DIR=/data/nimlab/software/CBIG_nimlab/CBIG/data/templates/volume/ \
+                mri_vol2vol --mov data/target/sub-{wildcards.sub}_ses-{wildcards.ses}/mni.nii.gz\
+                --targ /data/nimlab/software/CBIG_nimlab/CBIG/data/templates/volume/FSL_MNI152_FS4.5.0/mri/norm.nii.gz \
+                --s FSL_MNI152_FS4.5.0 --m3z talairach.m3z --o data/target/sub-{wildcards.sub}_ses-{wildcards.ses}/fs.nii.gz --no-save-reg --interp cubic")
+
+        # Threshold out interpolation noise
+        image.threshold_img(f"data/target/sub-{wildcards.sub}_ses-{wildcards.ses}/fs.nii.gz",10) \
+            .to_filename(f"data/target/sub-{wildcards.sub}_ses-{wildcards.ses}/fs_thresh.nii.gz")
+        fs_thresh_fullpath = os.path.abspath(f"data/target/sub-{wildcards.sub}_ses-{wildcards.ses}/fs_thresh.nii.gz")
+        sub_target_fullpath = os.path.abspath(f"data/target/sub-{wildcards.sub}_ses-{wildcards.ses}/sub.nii.gz")
+        shell(f"cd {input[0]}/mri/ && \
+                export SUBJECTS_DIR={os.path.abspath('data/fs_subjects')} && \
+                mri_vol2vol --mov norm.mgz --s sub-{wildcards.sub}_ses-{wildcards.ses} \
+                --targ {fs_thresh_fullpath}  --o {sub_target_fullpath} --no-save-reg --interp cubic --inv-morph")
+
+        sub_transformed = image.threshold_img(sub_target_fullpath,10)
+        sub_target_vox = center_of_gravity(sub_transformed.get_fdata())
+        sub_target_coord = image.coord_transform(sub_target_vox[0], sub_target_vox[1], sub_target_vox[2], sub_transformed.affine)
+        with open(output[0], "w+") as f:
+            f.write(f"{sub_target_coord[0]}, {sub_target_coord[1]}, {sub_target_coord[2]}\n")
 
 
 # QC metrics
