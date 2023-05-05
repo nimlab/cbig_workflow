@@ -108,10 +108,9 @@ rule cbig:
         "data/cbig_configs/sub-{sub}_ses-{ses}/sub-{sub}_ses-{ses}_slicetiming.txt"
     output:
         "cbig_sub-{sub}_ses-{ses}_singleecho_done.txt"
-
     run:
         begin_time = datetime.now()
-        shell("mkdir -p data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses}/"
+        shell("mkdir -p data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses}/")
         shell("export st_file=$PWD/{input[2]} && \
                 source scripts/freesurfer_setup.bash && \
                 echo $FREESURFER_HOME && \
@@ -149,7 +148,7 @@ rule cbig_multiecho:
             pa_trt = json.load(f)["TotalReadoutTime"]
         with open(f"data/BIDS/sub-{sub}/ses-{ses}/func/sub-{sub}_ses-{ses}_task-rest_run-01_echo-1_bold.json") as f:
             ees = json.load(f)["EffectiveEchoSpacing"] * 1000
-         with open(f"data/BIDS/sub-{sub}/ses-{ses}/func/sub-{sub}_ses-{ses}_task-rest_run-01_echo-1_bold.json") as f:
+        with open(f"data/BIDS/sub-{sub}/ses-{ses}/func/sub-{sub}_ses-{ses}_task-rest_run-01_echo-1_bold.json") as f:
             te = json.load(f)["EchoTime"] * 1000
 
         shell("mkdir -p data/cbig_output/sub-{sub}_ses-{ses}/")
