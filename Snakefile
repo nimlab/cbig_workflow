@@ -111,7 +111,7 @@ rule cbig:
 
     run:
         begin_time = datetime.now()
-        shell("mkdir -p data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses}/")
+        shell("mkdir -p data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses}/"
         shell("export st_file=$PWD/{input[2]} && \
                 source scripts/freesurfer_setup.bash && \
                 echo $FREESURFER_HOME && \
@@ -140,10 +140,29 @@ rule cbig_multiecho:
         "cbig_sub-{sub}_ses-{ses}_multiecho_done.txt",
         "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/norm_MNI152_1mm.nii.gz"
     run:
+        sub = wildcards.sub
+        ses = wildcards.ses
         begin_time = datetime.now()
-        shell("mkdir -p data/cbig_output/sub-{wildcards.sub}_ses-{wildcards.ses}/")
+        with open(f"data/BIDS/sub-{sub}/ses-{ses}/fmap/sub-{sub}_ses-{ses}_dir-AP_epi.json") as f:
+            ap_trt = json.load(f)["TotalReadoutTime"]
+        with open(f"data/BIDS/sub-{sub}/ses-{ses}/fmap/sub-{sub}_ses-{ses}_dir-PA_epi.json") as f:
+            pa_trt = json.load(f)["TotalReadoutTime"]
+        with open(f"data/BIDS/sub-{sub}/ses-{ses}/func/sub-{sub}_ses-{ses}_task-rest_run-01_echo-1_bold.json") as f:
+            ees = json.load(f)["EffectiveEchoSpacing"] * 1000
+         with open(f"data/BIDS/sub-{sub}/ses-{ses}/func/sub-{sub}_ses-{ses}_task-rest_run-01_echo-1_bold.json") as f:
+            te = json.load(f)["EchoTime"] * 1000
+
+        shell("mkdir -p data/cbig_output/sub-{sub}_ses-{ses}/")
         shell("export st_files=$(ls -p $PWD/{input[2]}/* | tr '\n' ',') && \
                 export met_val=$(cat {input[3]}) && \
+                \
+                export j_minus_image_path=data/BIDS/sub-{sub}/ses-{ses}/fmap/sub-{sub}_ses-{ses}_dir-AP_epi.nii.gz && \
+                export j_plus_image_path=data/BIDS/sub-{sub}/ses-{ses}/fmap/sub-{sub}_ses-{ses}_dir-PA_epi.nii.gz && \
+                export j_minus_trt={ap_trt} && \
+                export j_plus_trt={pa_trt} && \
+                export ees={ees} && \
+                export te={te} && \
+                \
                 source scripts/freesurfer_setup.bash && \
                 echo $FREESURFER_HOME && \
                 nice -n 19 csh -c \"$CBIG_CODE_DIR/stable_projects/preprocessing/CBIG_fMRI_Preproc2016/CBIG_preproc_fMRI_preprocess.csh \
