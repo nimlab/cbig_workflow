@@ -2,8 +2,10 @@ import json
 from datetime import datetime
 from nimlab import connectomics as cs
 from nimlab import functions as fn
-from nilearn import image
+from nimlab import datasets as ds
+from nilearn import image, maskers
 from numpy.linalg import inv
+from scipy import stats
 import numpy as np
 import os
 
@@ -309,17 +311,6 @@ rule subject_target:
         with open(output[0], "w+") as f:
             f.write(f"{sub_target_coord[0]}, {sub_target_coord[1]}, {sub_target_coord[2]}\n")
 
-
-# QC metrics
-rule mriqc:
-    input:
-        "data/BIDS/sub-{sub}/ses-{ses}/"
-    output:
-        directory("data/qc/mriqc/sub-{sub}/ses-{ses}/"),
-    run:
-        shell("mkdir -p data/qc/mriqc/")
-        shell("sh scripts/qc/run_mriqc.sh data/BIDS data/qc/mriqc/ {wildcards.sub}")
-
 rule window_clust:
     input:
         "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz",
@@ -333,3 +324,38 @@ rule window_clust:
         shell(f"python scripts/window_clust.py {input[0]} {output[0]}")
         shell(f"python scripts/window_clust.py {input[1]} {output[1]}")
         shell(f"python scripts/window_clust.py {input[2]} {output[2]}")
+
+# QC metrics
+rule mriqc:
+    input:
+        "data/BIDS/sub-{sub}/ses-{ses}/"
+    output:
+        directory("data/qc/sub-{sub}_ses-{ses}/mriqc/"),
+    run:
+        shell("mkdir -p data/qc/mriqc/")
+        shell("sh scripts/qc/run_mriqc.sh data/BIDS data/qc/sub-{wildcards.sub}_ses-{wildcards.ses}/mriqc/ {wildcards.sub}")
+
+rule qc_seeds:
+    input:
+        "data/cbig_output/sub-{sub}_ses-{ses}/{sub}/vol/sub-{sub}_ses-{ses}_concat.nii.gz"
+    output:
+        "data/qc/sub-{sub}_ses-{ses}/seed_corrs.txt"
+    run:
+        masker = maskers.NiftiMasker(mask_img=ds.get_img("MNI152_T1_2mm_brain_mask")).fit()
+
+        m1_map = cs.singlesubject_seed_conn("standard_data/M1_weighted_ROI_harvox.nii.gz", input[0], transform='zscore')
+        m1_map_std = image.load_img("standard_data/M1_weighted_ROI_harvox_AvgR_Fz.nii.gz")
+        m1_corr = stats.pearsonr(masker.transform(m1_map)[0,:],masker.transform(m1_map_std)[0,:])[0]
+
+        pcc_map = cs.singlesubject_seed_conn("standard_data/PCC_weighted_ROI_harvox.nii.gz", input[0], transform='zscore')
+        pcc_map_std = image.load_img("standard_data/PCC_weighted_ROI_harvox_AvgR_Fz.nii.gz")
+        pcc_corr = stats.pearsonr(masker.transform(pcc_map)[0,:],masker.transform(pcc_map_std)[0,:])[0]
+
+        sg_map = cs.singlesubject_seed_conn("standard_data/SG_6_16_-10_r10_msk3.nii.gz", input[0], transform='zscore')
+        sg_map_std = image.load_img("standard_data/SG_6_16_-10_r10_msk3_AvgR_Fz.nii.gz")
+        sg_corr = stats.pearsonr(masker.transform(sg_map)[0,:],masker.transform(sg_map_std)[0,:])[0]
+
+        with open(output[0],"w+") as f:
+            f.write(f"M1: {m1_corr}\n")
+            f.write(f"PCC: {pcc_corr}\n")
+            f.write(f"SG: {sg_corr}\n")
