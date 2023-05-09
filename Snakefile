@@ -151,12 +151,14 @@ rule cbig_multiecho:
         with open(f"data/BIDS/sub-{sub}/ses-{ses}/func/sub-{sub}_ses-{ses}_task-rest_run-01_echo-1_bold.json") as f:
             te = json.load(f)["EchoTime"] * 1000
 
+        ap_path = os.path.abspath(f"data/BIDS/sub-{sub}/ses-{ses}/fmap/sub-{sub}_ses-{ses}_dir-AP_epi.nii.gz")
+        pa_path = os.path.abspath(f"data/BIDS/sub-{sub}/ses-{ses}/fmap/sub-{sub}_ses-{ses}_dir-PA_epi.nii.gz")
         shell("mkdir -p data/cbig_output/sub-{sub}_ses-{ses}/")
         shell("export st_files=$(ls -p $PWD/{input[2]}/* | tr '\n' ',') && \
                 export met_val=$(cat {input[3]}) && \
                 \
-                export j_minus_image_path=data/BIDS/sub-{sub}/ses-{ses}/fmap/sub-{sub}_ses-{ses}_dir-AP_epi.nii.gz && \
-                export j_plus_image_path=data/BIDS/sub-{sub}/ses-{ses}/fmap/sub-{sub}_ses-{ses}_dir-PA_epi.nii.gz && \
+                export j_minus_image_path={ap_path} && \
+                export j_plus_image_path={pa_path} && \
                 export j_minus_trt={ap_trt} && \
                 export j_plus_trt={pa_trt} && \
                 export ees={ees} && \
