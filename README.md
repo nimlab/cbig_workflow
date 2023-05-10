@@ -9,6 +9,16 @@ TODO:
 
 
 # Tutorial
+## Start a tmux session
+```
+# Get a session on our owned node (sna0003)
+> srun -p nimlab --pty bash -i
+# If you have no existing session, run
+> tmux
+# Else, attach to your existing session
+> tmux ls
+> tmux attach -t <your session number>
+```
 
 ## Data Prep
 ```
