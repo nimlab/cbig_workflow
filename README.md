@@ -38,5 +38,5 @@ The pipeline is coordinated using [Snakemake](https://github.com/snakemake/snake
 # The -np flag indicates that this is a dry run. Check that the pipeline steps look like what you want before proceeding
 > snakemake -np data/target/sub-00_ses-pre/sub_target.txt
 # If everything seems fine, run it with c1 to specify 1 parallel job. Using more is possible if running multiple subjects, but may overload the node.
-> snakemake -pc1 data/target/sub-00_ses-pre/sub_target.txt
+> snakemake -pc1 data/target/sub-00_ses-pre/sub_target.txt data/qc/sub-00_ses-pre/seed_corrs.txt
 ```
