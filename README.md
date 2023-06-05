@@ -39,7 +39,6 @@ TODO:
 > for f in tar/*.tar; do tar -xf $f -C untarred; done;
 
 # Convert to BIDS format
-> cd /data/aint/data 
 > conda activate /data/nimlab/environment/conda/cbig
 > cd /data/aint/cbig_workflow
 > heudiconv -b -d /data/aint/RAW/{subject}/{session}/untarred/1/*/*/*/*.IMA -c dcm2niix -f scripts/heuristic.py -s 00 -ss pre -o /data/aint/cbig_workflow/data/BIDS 
