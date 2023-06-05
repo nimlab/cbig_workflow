@@ -11,19 +11,13 @@ TODO:
 # Tutorial
 ## Start a tmux session
 ```
-# Log into an erisone/eristwo login node
-> ssh cl20@eristwo.partners.org
+# Log into our node
+> ssh cl20@sna003a.research.partners.org
 # If you have no existing session, run
 > tmux
 # Else, attach to your existing session
 > tmux ls
 > tmux attach -t <your session number>
-# Make sure you note down which login node you started your session on. For example, if your
-# login node is eris1n4, next time use
-> ssh cl20@eris1n4.research.partners.org
-
-# Get a session on our owned node (sna0003)
-> srun -p nimlab --pty bash -i
 ```
 
 ## Data Prep
