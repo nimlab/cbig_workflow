@@ -22,7 +22,7 @@ setenv CBIG_SPM_DIR       /data/nimlab/software/spm12/
 setenv CBIG_ANTS_DIR      /data/nimlab/toolkits/ants-2.4.3/bin/
 #setenv CBIG_WB_DIR        /apps/arch/Linux_x86_64/HCP/workbench-1.1.1/
 #setenv CBIG_FSLDIR       /apps/lib/fsl/6.0.5.2 
-setenv CBIG_FSLDIR       /apps/lib/fsl/5.0.10
+setenv CBIG_FSLDIR       /apps/lib/fsl/5.0.10 
 # DO NOT CHANGE: define locations for unit tests data and replication data
 #setenv CBIG_TESTDATA_DIR  /mnt/eql/yeo1/CBIG_test_data/unit_tests
 #setenv CBIG_REPDATA_DIR   /mnt/eql/yeo1/CBIG_test_data/replication
