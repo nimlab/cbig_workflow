@@ -1,4 +1,5 @@
 data/
 .snakemake/
+__pycache__/
 *_done.txt
 .panfs*
