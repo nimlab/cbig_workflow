@@ -272,6 +272,7 @@ rule cbig_multiecho_sdr:
                 \
                 source scripts/freesurfer_setup.bash && \
                 echo $FREESURFER_HOME && \
+                export CBIG_CODE_DIR=/data/nimlab/software/CBIG_nimlab/CBIG && \
                 nice -n 19 csh -c \"$CBIG_CODE_DIR/stable_projects/preprocessing/CBIG_fMRI_Preproc2016/CBIG_preproc_fMRI_preprocess.csh \
                 -s {wildcards.sub} \
                 -fmrinii $PWD/{input[1]} \
