@@ -21,18 +21,16 @@ TODO:
 ```
 
 ## Data Prep
-
+Follow this format RAW>A00>pre>dicoms and make sure raw dicoms are placed in a folder labeled "dicoms"
 ### Set Participant ID and session
 ```
-export SUBJECT="00"
+export SUBJECT="A00"
 export SESSION="pre"
 ```
 ### Create new directories and convert to BIDS format
 ```
-mkdir -p /data/aint/RAW/$SUBJECT/$SESSION/dicoms
-conda activate /data/nimlab/environment/conda/cbig
-cd /data/aint/cbig_workflow
-heudiconv -b -d /data/aint/RAW/{subject}/{session}/dicoms/*.dcm -c dcm2niix -f scripts/heuristic.py -s $SUBJECT -ss $SESSION -o /data/aint/cbig_workflow/data/BIDS 
+cd /data/aint
+sh bidsify.sh A00 pre
 ```
 
 ## Run the pipeline!
