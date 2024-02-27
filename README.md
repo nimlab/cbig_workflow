@@ -36,6 +36,8 @@ sh bidsify.sh A00 pre
 ## Run the pipeline!
 The pipeline is coordinated using [Snakemake](https://github.com/snakemake/snakemake) which automatically calculates what steps need to be run in order to produce a desired file. Since we want to produce the target coordinates, we tell Snakemake to produce `data/target/sub-00_ses-pre/sub_target.txt`
 ```
+cd /data/aint/cbig_workflow
+conda activate /data/nimlab/environment/conda/cbig
 csh
 source scripts/CBIG_setup_eristwo.csh
 source scripts/freesurfer_setup.csh
